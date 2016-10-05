@@ -13,8 +13,8 @@ int pinMotorDerecha=7;
 int pinSensorDerecha=4;
 int pinSensorIzquierda=5;
  
-#define trigPin 13
-#define echoPin 12
+#define proximidadTrigPin 13
+#define proximidadEchoPin 12
 
 
 
@@ -25,8 +25,8 @@ void setup(){
   pinMode(pinMotorIzquierda,OUTPUT);
   pinMode(pinMotorDerecha,OUTPUT);
   
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  pinMode(proximidadTrigPin, OUTPUT);
+  pinMode(proximidadEchoPin, INPUT);
 
   
 
@@ -134,13 +134,13 @@ int objetoEnfrente(){
   
   Serial.println("Checando objeto");
  
-    digitalWrite(trigPin, LOW);  // Added this line
+    digitalWrite(proximidadTrigPin, LOW);  // Added this line
     delayMicroseconds(2); // Added this line
-    digitalWrite(trigPin, HIGH);
+    digitalWrite(proximidadTrigPin, HIGH);
   //  delayMicroseconds(1000); - Removed this line
     delayMicroseconds(10); // Added this line
-    digitalWrite(trigPin, LOW);
-    duration = pulseIn(echoPin, HIGH);
+    digitalWrite(proximidadTrigPin, LOW);
+    duration = pulseIn(proximidadEchoPin, HIGH);
     distance = (duration/2) / 29.1;
     Serial.println(distance );
     if (distance < 4) {  // This is where the LED On/Off happens
