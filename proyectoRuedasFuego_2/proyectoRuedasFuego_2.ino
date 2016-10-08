@@ -1,7 +1,8 @@
 #include <SoftwareSerial.h>
-SoftwareSerial configBT(0,1); //RX,TX
+SoftwareSerial configBT(2,3); //RX,TX
 int i=0;
 int cmd=0;
+int serialVerbose =0; //1 manda al serial los mensajes mas a detalle
 char entrada[129],salida[129];
 //const int pinPowBT=6;
 int carritoRun = 0;
@@ -33,9 +34,12 @@ void setup(){
 //Bluetooth Setup  
   //pinMode(pinPowBT,OUTPUT);
   //digitalWrite(pinPowBT,HIGH);
-  configBT.begin(38400);
   Serial.begin(9600);
   Serial.print("Iniciando Ruedas de Fuego a 38400 baudios\r\n");
+  
+  configBT.begin(9600);
+  configBT.print("Iniciando Bluetooth");
+
   
 }
 void mantenerRecto(){
@@ -44,18 +48,19 @@ void mantenerRecto(){
   digitalWrite(pinMotorDerecha,LOW);
 }
 void girarIzquierda(){
-  Serial.println("Gira Izquierda\r\n");
+  imprimeMensaje("Gira Izquierda",1);
+  
   digitalWrite(pinMotorIzquierda,HIGH);
   digitalWrite(pinMotorDerecha,LOW);
 }
 void girarDerecha(){
-  Serial.println("Gira Derecha\r\n");
+  imprimeMensaje("Gira Derecha",1);
+   
   digitalWrite(pinMotorIzquierda,LOW);
   digitalWrite(pinMotorDerecha,HIGH);
 }
 void pararCarro(){
-  
-  
+
   
   carritoRun =0;
   digitalWrite(pinMotorEmpuje,LOW);
@@ -64,14 +69,13 @@ void pararCarro(){
   
 }
 void arrancarCarro(){
-  
-  Serial.println("Arrancando Carro\r\n");
+  imprimeMensaje("Arrancando Carro",1);
   carritoRun =1;
   digitalWrite(pinMotorEmpuje,HIGH);
 }
  
 
-void recibirComandoBT(){
+void recibirComandoBT_pin01(){
   
   //Setear las variables en Null
   for(i=0;i<129;i++){
@@ -88,85 +92,74 @@ void recibirComandoBT(){
       if(i==0) delay(100);
       entrada[i]=Serial.read();
     }
-    
-  Serial.println(entrada);
+  imprimeMensaje(entrada,0);
+  
  
   } 
-  if(entrada=="p"){
-    pararCarro();
-  }
-  if(entrada=="a"){
-   Serial.println("-------------Avanzando-------------");
  
-    arrancarCarro();
-  }
 
-
-  
-  /*
-  Serial.print("esperando comando\r\n");
-  while(cmd==0){
-    
-  }
-  cmd=0;
-  Serial.print("recibiendo comando\r\n");
+}
+void recibirComandoBT(){
+   imprimeMensaje("Esperando comando BT",0); 
  
-  Serial.print("imprimiendo Comando\r\n");
-  
-  //configBT.print(entrada);
-  configBT.print("Listo...");
-  configBT.print("\r\n");
-  delay(1000);
+  //configBT.print("mensaje a bluetooth");
+ 
   for(i=0;configBT.available();i++){
     salida[i]=configBT.read();
   }
-  Serial.print("Respuesta:\r\n");
+  
   if(salida[0]!=NULL) 
   {
-    Serial.println(salida);
-  }else
-  {
-    Serial.print("salida 0 is null\r\n");
-  }*/
+      imprimeMensaje(salida,1);
+       if(String(salida)=="p"){
+        imprimeMensaje("-------------Parando-------------",0);
+          pararCarro();
+        }
+        if(String(salida)=="a"){
+          imprimeMensaje("-------------Avanzando-------------",0);
+          arrancarCarro();
+        }
+      salida[0]=NULL;
+  }
+  
+  
 }
 int objetoEnfrente(){
   long duration, distance;
-  
-  Serial.println("Checando objeto");
- 
-    digitalWrite(proximidadTrigPin, LOW);  // Added this line
-    delayMicroseconds(2); // Added this line
+  int returnme=1; // el valor default es 1 por que si no podemos sensar hay que parar el carro
+    imprimeMensaje("Checando proximidad",0);
+    digitalWrite(proximidadTrigPin, LOW);  
+    delayMicroseconds(2); 
     digitalWrite(proximidadTrigPin, HIGH);
-  //  delayMicroseconds(1000); - Removed this line
-    delayMicroseconds(10); // Added this line
+    delayMicroseconds(10);   //PENDIENTE: quitar y probar funcionamiento del sensor
     digitalWrite(proximidadTrigPin, LOW);
     duration = pulseIn(proximidadEchoPin, HIGH);
     distance = (duration/2) / 29.1;
-    Serial.println(distance );
-    if (distance < 4) {  // This is where the LED On/Off happens
-      
+    imprimeMensaje(String(distance),0);
+     
+    if (distance < 7) {
+        
+      imprimeMensaje(" Objeto en menos de 5 cm",1); 
+      returnme= 1;
+    }
+    else {
+        returnme= 0;
+      }
  
-     return 1;
-  }
-    else {
-      return 0;
-    }
-    if (distance >= 200 || distance <= 0){
-      Serial.println("Out of range");
-    }
-    else {
-      Serial.print(distance);
-      Serial.println(" cm"); 
-    }
-    delay(500);
-
+    //delay(500); //PENDIENTE: quitar y probar funcionamiento del sensor
+  return returnme;
+  
+}
+void imprimeMensaje(String mensaje ,int level){//level =0 muestra si verbose=1, level =1 siempre muestra
+ if(serialVerbose==1 || level==1){
+      Serial.println(mensaje);
+      
+    } 
   
 }
 void loop(){
   start: 
- delay(500);
-
- 
+  //carritoRun=1;//debug
   recibirComandoBT();
   if(carritoRun==1){
 
