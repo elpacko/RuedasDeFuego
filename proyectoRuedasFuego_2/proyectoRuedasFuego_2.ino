@@ -2,18 +2,18 @@
 SoftwareSerial configBT(2,3); //RX,TX
 int i=0;
 int cmd=0;
-int serialVerbose =0; //1 manda al serial los mensajes mas a detalle
+int serialVerbose =1; //1 manda al serial los mensajes mas a detalle
 char entrada[129],salida[129];
 //const int pinPowBT=6;
 int carritoRun = 0;
 
 int pinMotorEmpuje=10;
-int pinMotorIzquierda=6;
-int pinMotorDerecha=7;
+int pinMotorIzquierda=8;
+int pinMotorDerecha=9;
 
-int pinSensorDerecha=4;
-int pinSensorIzquierda=5;
- 
+int pinSensorDerecha=5;
+int pinSensorIzquierda=4;
+#define distanciaMinima 2
 #define proximidadTrigPin 13
 #define proximidadEchoPin 12
 
@@ -28,7 +28,9 @@ void setup(){
   
   pinMode(proximidadTrigPin, OUTPUT);
   pinMode(proximidadEchoPin, INPUT);
-
+  
+  pinMode(pinSensorIzquierda, INPUT);
+  
   
 
 //Bluetooth Setup  
@@ -60,7 +62,8 @@ void girarDerecha(){
   digitalWrite(pinMotorDerecha,HIGH);
 }
 void pararCarro(){
-
+  imprimeMensaje("Parando Carro",1);
+  
   
   carritoRun =0;
   digitalWrite(pinMotorEmpuje,LOW);
@@ -100,7 +103,7 @@ void recibirComandoBT_pin01(){
 
 }
 void recibirComandoBT(){
-   imprimeMensaje("Esperando comando BT",0); 
+   //imprimeMensaje("Esperando comando BT",0); 
  
   //configBT.print("mensaje a bluetooth");
  
@@ -129,15 +132,15 @@ int objetoEnfrente(){
   int returnme=1; // el valor default es 1 por que si no podemos sensar hay que parar el carro
     imprimeMensaje("Checando proximidad",0);
     digitalWrite(proximidadTrigPin, LOW);  
-    delayMicroseconds(2); 
+    //delayMicroseconds(2); 
     digitalWrite(proximidadTrigPin, HIGH);
-    delayMicroseconds(10);   //PENDIENTE: quitar y probar funcionamiento del sensor
+    //delayMicroseconds(10);   //PENDIENTE: quitar y probar funcionamiento del sensor
     digitalWrite(proximidadTrigPin, LOW);
     duration = pulseIn(proximidadEchoPin, HIGH);
     distance = (duration/2) / 29.1;
     imprimeMensaje(String(distance),0);
      
-    if (distance < 7) {
+    if (distance < distanciaMinima) {
         
       imprimeMensaje(" Objeto en menos de 5 cm",1); 
       returnme= 1;
@@ -162,8 +165,10 @@ void loop(){
   //carritoRun=1;//debug
   recibirComandoBT();
   if(carritoRun==1){
-
-    if(0==0)//si ninguno detecta la linea mantener recto{
+      imprimeMensaje("pinSensorIzquierda",0);
+      imprimeMensaje(String(digitalRead(pinSensorIzquierda)),0);
+      
+    if(digitalRead(pinSensorIzquierda)==0&&0==0)//si ninguno detecta la linea mantener recto{
     {
       mantenerRecto();
     }
@@ -173,16 +178,20 @@ void loop(){
       {
         girarDerecha();
       }
-      if(0==1)//si el sensor izquierdo detecta la linea girar a la izquierda
+      
+      if(digitalRead(pinSensorIzquierda)==1)//si el sensor izquierdo detecta la linea girar a la izquierda
       {
   
-        girarIzquierda();      
+        girarIzquierda();
+        delay(1000);      
       }
     }
    
-    if(objetoEnfrente()==1)//si el sensor de proximidad detecta una posible colision, parar el carro
+    if(0==1)//objetoEnfrente()==1)//si el sensor de proximidad detecta una posible colision, parar el carro
     {
-          pararCarro();
+        imprimeMensaje("Objeto Enfrente",1);
+  
+        //  pararCarro();
     }
   
   
